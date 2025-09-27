@@ -1,6 +1,7 @@
 import json
 import os
 import codecs
+import re
 
 from mcdreforged.api.all import *
 from auto_execute.AutoExecute_Language import Auto_Language as Al
@@ -541,7 +542,7 @@ def on_load(server: PluginServerInterface, old):
     require = Requirements()
 
     builder.command('!!ae', print_help_msg)
-    builder.command('!!ae make <script>', create_script)
+    builder.command("!!ae make <new_script>", create_script)
     builder.command('!!ae remove <script>', remove_script)
     builder.command('!!ae add <script> <command>', add_command)
     builder.command('!!ae del <script> <command>', delete_command)
@@ -558,6 +559,7 @@ def on_load(server: PluginServerInterface, old):
     builder.command('!!ae reload', reload_plugin)
     builder.command('!!ae run_list', show_tasks)
 
+    builder.arg("new_script", Text)
     builder.arg('script', Text)
     builder.arg('command', GreedyText)
     builder.arg('per', Integer)
@@ -571,6 +573,15 @@ def on_load(server: PluginServerInterface, old):
         permissions = level_dict.get(literal, [])
         builder.literal(literal).requires(require.has_permission(permissions),
                                           failure_message_getter=lambda err: "权限不足")
+
+    builder.arg("script", Text).suggests(
+        lambda: [
+            re.sub(r"\.json$", "", file)
+            for file in os.listdir(Pc.script_path)
+            if re.search(r".\.json$", file)
+            and os.path.isfile(os.path.join(Pc.script_path, file))
+        ]
+    )
 
     builder.register(server)
 
